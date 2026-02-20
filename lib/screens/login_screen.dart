@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,13 +9,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  static final ApiService _apiService = ApiService();
-
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -25,43 +20,20 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _login() async {
-    final String email = _emailController.text.trim();
-    final String password = _passwordController.text.trim();
+  void _login() {
 
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+    
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all fields')),
       );
       return;
     }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      await _apiService.login(
-        username: email,
-        password: password,
-      );
-
-      if (!mounted) return;
-
-      Navigator.pushReplacementNamed(context, '/home');
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
+    
+   
+    Navigator.pushReplacementNamed(context, '/home');
   }
 
   @override
@@ -75,7 +47,8 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 40),
-
+              
+              // Logo
               Center(
                 child: Column(
                   children: [
@@ -104,9 +77,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-
+              
               const SizedBox(height: 40),
-
+              
               const Text(
                 "Welcome Back!",
                 style: TextStyle(
@@ -114,9 +87,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
+              
               const SizedBox(height: 8),
-
+              
               const Text(
                 "Login to continue fabric inspection",
                 style: TextStyle(
@@ -124,9 +97,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontSize: 16,
                 ),
               ),
-
+              
               const SizedBox(height: 30),
-
+              
+              // Email Field
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -145,9 +119,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
+              
               const SizedBox(height: 16),
-
+              
+              // Password Field
               TextField(
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
@@ -178,13 +153,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
+              
               const SizedBox(height: 10),
-
+              
+              // Forgot Password
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                   
+                  },
                   child: const Text(
                     "Forgot Password?",
                     style: TextStyle(
@@ -193,14 +171,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
+              
               const SizedBox(height: 20),
-
+              
+              // Sign In Button
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
+                  onPressed: _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE91E63),
                     foregroundColor: Colors.white,
@@ -209,22 +188,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     elevation: 0,
                   ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
-                        )
-                      : const Text(
-                          "Sign In",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                  child: const Text(
+                    "Sign In",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
-
+              
               const SizedBox(height: 20),
-
+              
               Center(
                 child: RichText(
                   text: TextSpan(
@@ -242,15 +217,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            Navigator.pushReplacementNamed(
-                                context, '/signup');
+                            Navigator.pushReplacementNamed(context, '/signup');
                           },
                       ),
                     ],
                   ),
                 ),
               ),
-
+              
               const SizedBox(height: 20),
             ],
           ),
