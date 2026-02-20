@@ -7,12 +7,12 @@ import 'screens/fabric_view_page.dart';
 import 'screens/create_profile.dart';
 import 'screens/settings_page.dart';
 import 'home.dart';
-import 'test_api.dart';
+//import 'test_api.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-    testApi(); 
+  
   runApp(const MyApp());
 }
 
@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
       ),
       
  
-      initialRoute: '/signup',
+     initialRoute: '/login',
       
      
       routes: {
