@@ -1,6 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-
-
+import 'package:image_picker/image_picker.dart';
 
 class ResultPage extends StatefulWidget {
   const ResultPage({Key? key}) : super(key: key);
@@ -10,34 +10,96 @@ class ResultPage extends StatefulWidget {
 }
 
 class _ResultPageState extends State<ResultPage> {
- 
-  
- 
+  File? _selectedImage;
+  bool _isAnalyzing = false;
+  final ImagePicker _picker = ImagePicker();
+
   final List<FabricItem> fabricItems = [
-    FabricItem(
-      name: 'Cotton',
-      image: '',
-      progress: 0.2,
-    ),
-    FabricItem(
-      name: 'Silk',
-      image: '',
-      progress: 0.4,
-    ),
-    FabricItem(
-      name: 'Wool',
-      image: '',
-      progress: 0.6,
-    ),
-    FabricItem(
-      name: 'Linen',
-      image: '',
-      progress: 1.0,
-    ),
+    FabricItem(name: 'Cotton', image: '', progress: 0.2),
+    FabricItem(name: 'Silk', image: '', progress: 0.4),
+    FabricItem(name: 'Wool', image: '', progress: 0.6),
+    FabricItem(name: 'Linen', image: '', progress: 1.0),
   ];
 
+  
   void _pickImage() {
-   
+    _captureImage(ImageSource.camera);
+  }
+
+
+  Future<void> _captureImage(ImageSource source) async {
+    try {
+      final XFile? photo = await _picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1080,
+      );
+
+      if (photo != null) {
+        setState(() {
+          _selectedImage = File(photo.path);
+          _isAnalyzing = true;
+        });
+
+        
+        await Future.delayed(const Duration(seconds: 2));
+
+        setState(() {
+          _isAnalyzing = false;
+        });
+
+        _showAnalysisResult();
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+
+  void _showAnalysisResult() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Analysis Complete'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_selectedImage != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(_selectedImage!,
+                    height: 120, width: double.infinity, fit: BoxFit.cover),
+              ),
+            const SizedBox(height: 12),
+            const Text('Fabric scanned successfully! Quality check passed.'),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE91E63),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('OK', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -54,10 +116,7 @@ class _ResultPageState extends State<ResultPage> {
         title: const Text(
           'Scan Fabric',
           style: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
+              color: Colors.black, fontSize: 20, fontWeight: FontWeight.w600),
         ),
       ),
       body: Column(
@@ -80,46 +139,98 @@ class _ResultPageState extends State<ResultPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Scan Fabric',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Capture or upload fabric image',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
+                const Text('Scan Fabric',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                const Text('Capture or upload fabric image',
+                    style: TextStyle(fontSize: 14, color: Colors.grey)),
                 const SizedBox(height: 16),
+
+              
+                if (_selectedImage != null) ...[
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          _selectedImage!,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      if (_isAnalyzing)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircularProgressIndicator(
+                                      color: Colors.white),
+                                  SizedBox(height: 8),
+                                  Text('Analyzing...',
+                                      style: TextStyle(color: Colors.white)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedImage = null),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close,
+                                size: 18, color: Colors.red),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _pickImage,
+                    onPressed: _isAnalyzing ? null : _pickImage,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE91E63),
                       foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey[300],
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                          borderRadius: BorderRadius.circular(8)),
                       elevation: 0,
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add, size: 20),
-                        SizedBox(width: 8),
+                        Icon(
+                          _selectedImage == null
+                              ? Icons.add
+                              : Icons.refresh_rounded,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
                         Text(
-                          'Add Image',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          _selectedImage == null
+                              ? 'Add Image'
+                              : 'Change Image',
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -161,46 +272,23 @@ class _ResultPageState extends State<ResultPage> {
       ),
       child: Row(
         children: [
-      
           Container(
             width: 60,
             height: 60,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: Colors.grey[200],
+              color: _getColorForIndex(fabricItems.indexOf(item)),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                item.image,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: _getColorForIndex(fabricItems.indexOf(item)),
-                    child: const Icon(
-                      Icons.texture,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                  );
-                },
-              ),
-            ),
+            child: const Icon(Icons.texture, color: Colors.white, size: 30),
           ),
           const SizedBox(width: 16),
-          
-         
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                Text(item.name,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -211,8 +299,7 @@ class _ResultPageState extends State<ResultPage> {
                           value: item.progress,
                           backgroundColor: Colors.grey[200],
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFFE91E63),
-                          ),
+                              Color(0xFFE91E63)),
                           minHeight: 8,
                         ),
                       ),
@@ -221,10 +308,9 @@ class _ResultPageState extends State<ResultPage> {
                     Text(
                       '${(item.progress * 100).toInt()}%',
                       style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFFE91E63),
-                      ),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFE91E63)),
                     ),
                   ],
                 ),
@@ -247,15 +333,10 @@ class _ResultPageState extends State<ResultPage> {
   }
 }
 
-
 class FabricItem {
   final String name;
   final String image;
   final double progress;
 
-  FabricItem({
-    required this.name,
-    required this.image,
-    required this.progress,
-  });
+  FabricItem({required this.name, required this.image, required this.progress});
 }
